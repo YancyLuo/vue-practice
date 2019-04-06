@@ -2,7 +2,9 @@
   <div id="app">
     <m-header></m-header>
     <tab></tab>
-    <router-view/>
+    <keep-alive>
+      <router-view/>
+    </keep-alive>
   </div>
 </template>
 
@@ -13,6 +15,15 @@ export default {
   components: {
     MHeader,
     Tab
+  },
+  methods: {
+    getRem () {
+      var html = document.getElementsByTagName('html')[0]
+      html.style.fontSize = html.offsetWidth / 7.5 + 'px'
+    }
+  },
+  mounted () {
+    this.getRem()
   }
 }
 </script>
