@@ -1,32 +1,37 @@
 <template>
   <div class="recommend">
-    <swiper :options="swiperOption" v-if="swiperSlides.length>0" class="swiper">
-      <swiper-slide v-for="(slide, index) in swiperSlides" :key="index">
-        <a :href="slide.linkUrl">
-          <img :src="slide.picUrl">
-        </a>
-      </swiper-slide>
-      <div class="swiper-pagination" slot="pagination"></div>
-    </swiper>
-    <div class="recommend-list">
-      <h1 class="list-title">热门歌单推荐</h1>
-      <ul>
-        <li v-for="(item, index) in discList" class="item" :key="index">
-          <div class="icon">
-            <img width="60" height="60"  v-lazy="item.imgurl">
-          </div>
-          <div class="text">
-            <h2 class="name" v-html="item.creator.name"></h2>
-            <p class="desc" v-html="item.dissname"></p>
-          </div>
-        </li>
-      </ul>
-    </div>
+    <scroll class="recommend-content" ref="scroll">
+      <div>
+        <swiper :options="swiperOption" v-if="swiperSlides.length>0" class="swiper">
+          <swiper-slide v-for="(slide, index) in swiperSlides" :key="index">
+            <a :href="slide.linkUrl">
+              <img :src="slide.picUrl" @load="loadImage">
+            </a>
+          </swiper-slide>
+          <div class="swiper-pagination" slot="pagination"></div>
+        </swiper>
+        <div class="recommend-list">
+          <h1 class="list-title">热门歌单推荐</h1>
+          <ul>
+            <li v-for="(item, index) in discList" class="item" :key="index">
+              <div class="icon">
+                <img width="60" height="60"  v-lazy="item.imgurl">
+              </div>
+              <div class="text">
+                <h2 class="name" v-html="item.creator.name"></h2>
+                <p class="desc" v-html="item.dissname"></p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
     <loading v-if="!discList.length"></loading>
+    </scroll>
   </div>
 </template>
 
 <script>
+import Scroll from '@/base/scroll/scroll'
 import 'swiper/dist/css/swiper.css'
 import Loading from '@/base/loading/loading'
 import { swiper, swiperSlide } from 'vue-awesome-swiper'
@@ -45,13 +50,15 @@ export default {
         loop: true
       },
       swiperSlides: [],
-      discList: []
+      discList: [],
+      checkLoad: false
     }
   },
   components: {
     swiper,
     swiperSlide,
-    Loading
+    Loading,
+    Scroll
   },
   created () {
     this._getRecommend().then((res) => {
@@ -68,43 +75,58 @@ export default {
   methods: {
     _getRecommend () {
       return getRecommend()
+    },
+    loadImage () {
+      if (!this.checkLoad) {
+        this.$refs.scroll.refresh()
+        this.checkLoad = true
+        console.log(this.checkLoad)
+      }
     }
-  }
+  },
 }
 </script>
 
 <style lang="stylus" scoped>
  @import "~common/stylus/variable"
-  .swiper
-    img
-      width:100%
-  .recommend-list
-    .list-title
-      height: 65px
-      line-height: 65px
-      text-align: center
-      font-size: $font-size-medium
-      color: $color-theme
-    .item
-      display: flex
-      box-sizing: border-box
-      align-items: center
-      padding: 0 20px 20px 20px
-      .icon
-        flex: 0 0 60px
-        width: 60px
-        padding-right: 20px
-      .text
-        display: flex
-        flex-direction: column
-        justify-content: center
-        flex: 1
-        line-height: 20px
-        overflow: hidden
-        font-size: $font-size-medium
-        .name
-          margin-bottom: 10px
-          color: $color-text
-        .desc
-          color: $color-text-d
+.recommend
+    position: fixed
+    width: 100%
+    top: 88px
+    bottom: 0
+    .recommend-content
+      height: 100%
+      overflow: hidden
+      .swiper
+        img
+          width:100%
+      .recommend-list
+        .list-title
+          height: 65px
+          line-height: 65px
+          text-align: center
+          font-size: $font-size-medium
+          color: $color-theme
+        .item
+          display: flex
+          box-sizing: border-box
+          align-items: center
+          padding: 0 20px 20px 20px
+          .icon
+            flex: 0 0 60px
+            width: 60px
+            padding-right: 20px
+          .text
+            display: flex
+            flex-direction: column
+            justify-content: center
+            flex: 1
+            line-height: 20px
+            overflow: hidden
+            font-size: $font-size-medium
+            .name
+              margin-bottom: 10px
+              color: $color-text
+            .desc
+              color: $color-text-d
 </style>

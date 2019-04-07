@@ -1,6 +1,6 @@
 <template>
   <div class="singer">
-    singer
+    <listview :data="singers"></listview>
   </div>
 </template>
 
@@ -8,6 +8,7 @@
 import { getSingerList } from "@/api/singer.js"
 import { ERR_OK } from '@/api/config.js'
 import { Singer } from 'common/js/singer.js'
+import Listview from '@/base/listview/listview'
 const HOT_NAME = '热门'
 const HOT_LIST_LEN = 10
 export default {
@@ -16,6 +17,9 @@ export default {
     return {
       singers:[]
     }
+  },
+  components: {
+    Listview
   },
   methods: {
     _getSingerList() {
@@ -30,12 +34,12 @@ export default {
       let singerList = {
         hot: {
           title: HOT_NAME,
-          hotSinger : [],
+          items: [],
         }
       }
       list.forEach((item,index) => {
         if (index < HOT_LIST_LEN ) {
-          singerList.hot.hotSinger.push(new Singer({
+          singerList.hot.items.push(new Singer({
             id:item.Fsinger_id,
             name:item.Fsinger_name,
             mid: item.Fsinger_mid
