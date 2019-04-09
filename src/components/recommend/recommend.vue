@@ -80,7 +80,6 @@ export default {
       if (!this.checkLoad) {
         this.$refs.scroll.refresh()
         this.checkLoad = true
-        console.log(this.checkLoad)
       }
     }
   },

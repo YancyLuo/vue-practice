@@ -1,6 +1,10 @@
 <template>
   <div class="singer">
-    <listview :data="singers"></listview>
+    <listview :data="singers" @select="selectSinger"></listview>
+    <loading v-if="!singers.length && $route.path ===   '/singer'"/>
+    <!-- <transition name="slide"> -->
+      <router-view/>
+    <!-- </transition> -->
   </div>
 </template>
 
@@ -9,6 +13,9 @@ import { getSingerList } from "@/api/singer.js"
 import { ERR_OK } from '@/api/config.js'
 import { Singer } from 'common/js/singer.js'
 import Listview from '@/base/listview/listview'
+import Loading from '@/base/loading/loading'
+import { setTimeout } from 'timers';
+import { mapMutations } from 'vuex'
 const HOT_NAME = '热门'
 const HOT_LIST_LEN = 10
 export default {
@@ -19,9 +26,14 @@ export default {
     }
   },
   components: {
-    Listview
+    Listview,
+    Loading
   },
   methods: {
+    selectSinger(Singer) {
+      this.$router.push(`/singer/${Singer.mid}`)
+      this.setSinger(Singer)
+    },
     _getSingerList() {
       getSingerList().then((res) => {
         if (res.code === ERR_OK) {
@@ -40,7 +52,6 @@ export default {
       list.forEach((item,index) => {
         if (index < HOT_LIST_LEN ) {
           singerList.hot.items.push(new Singer({
-            id:item.Fsinger_id,
             name:item.Fsinger_name,
             mid: item.Fsinger_mid
           }))
@@ -52,7 +63,6 @@ export default {
           }
         }
         singerList[item.Findex].items.push(new Singer({
-          id:item.Fsinger_id,
           name:item.Fsinger_name,
           mid: item.Fsinger_mid
         }))
@@ -72,7 +82,10 @@ export default {
         return a.title.charCodeAt(0) - b.title.charCodeAt(0)
       })
       return hot.concat(ret)
-    }
+    },
+    ...mapMutations({
+      setSinger: 'SET_SINGER'
+    })
   },
   created() {
     this._getSingerList();
@@ -82,6 +95,9 @@ export default {
 }
 </script>
 
-<style lang="stylus">
-
+<style lang="stylus" scoped>
+  .slide-enter-active,.slide-leave-active
+    transition: all .3s
+  .slide-enter,.slide-leave-to
+    transform: translate3d(100%, 0, 0)
 </style>

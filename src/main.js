@@ -4,7 +4,7 @@ import App from './App.vue'
 import router from '@/router/index'
 import axios from 'axios'
 import VueLazyload from 'vue-lazyload'
-// import store from './store'
+import store from './store'
 import fastclick from 'fastclick'
 import 'common/stylus/index.styl'
 
@@ -17,6 +17,6 @@ fastclick.attach(document.body)
 Vue.prototype.$axios = axios
 new Vue({
   router,
-  // store,
+  store,
   render: h => h(App)
 }).$mount('#app')

@@ -21,6 +21,8 @@ export default {
 
   .loading
     width: 100%
+    position: relative
+    z-index: 100
     text-align: center
     .desc
       line-height: 20px
