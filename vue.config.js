@@ -1,5 +1,6 @@
 'use strict'
 const Path = require('path')
+const bodyParser = require('body-parser')
 var axios = require('axios')
 function resolve (dir) {
   return Path.join(__dirname, dir)
@@ -37,6 +38,20 @@ module.exports = {
           res.json(response.data)
         }).catch((e) => {
           console.info(e)
+        })
+      })
+      app.post('/api/getPurlUrl', bodyParser.json(), function(req, res) {
+        const url = 'https://u.y.qq.com/cgi-bin/musicu.fcg'
+        axios.post(url, req.body, {
+          headers: {
+            referer: 'https://y.qq.com',
+            origin: 'https://y.qq.com',
+            'Content-type': 'application/x-www-form-urlencoded'
+          }
+        }).then((response) => {
+          res.json(response.data)
+        }).catch((e) => {
+          console.log('getPurlUrl-error' + e)
         })
       })
     }

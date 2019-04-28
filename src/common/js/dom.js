@@ -7,19 +7,19 @@ export function getData(el, name, val) {
   }
 }
 
-
-
-export function prefix() {
+export function prefix(style) {
   let prefix = {
     '-webkit-': '-webkit-transform',
     '-moz-': '-moz-transform',
     '-o-': '-o-transform',
     '-ms-': '-ms-transform',
-    'standard': 'transform'
+    // 'standard': 'transform'
   }
   let elStyle = document.createElement('div').style
   for (let key in prefix) {
-    if (elStyle[prefix[key]]=== '') return key
+    if (elStyle[prefix[key]]=== '') {
+      return style ? key + style : key
+    }
   }
-  return false
+  return style ? style : ''
 }

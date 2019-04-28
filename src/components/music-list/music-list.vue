@@ -21,7 +21,7 @@
             :listenScroll="true"
             @scroll="scroll">
       <div class="song-list-wrapper">
-        <song-list :songs="songs"></song-list>
+        <song-list :songs="songs" @play="playSong"></song-list>
       </div>
       <div v-show="!songs.length" class="loading-container">
         <loading></loading>
@@ -36,6 +36,8 @@ import Scroll from '@/base/scroll/scroll'
 import { prefix } from 'common/js/dom'
 import { Transform } from 'stream';
 import Loading from '@/base/loading/loading'
+import { mapActions } from 'vuex'
+
 const RESERVED_HEIGHT = 40
 
 export default {
@@ -72,8 +74,15 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['selectPlay']),
     back() {
       this.$router.back()
+    },
+    playSong(song, index) {
+      this.selectPlay({
+        list: this.songs,
+        index
+      })
     },
     scroll(pos) {
       var scrollY = pos.y

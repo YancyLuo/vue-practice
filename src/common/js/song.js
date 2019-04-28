@@ -1,3 +1,5 @@
+import { getSongsUrl } from '@/api/song'
+
 export default class Song {
   constructor({id, mid, singer, name, album, duration, image, url}) {
     this.id = id
@@ -20,7 +22,7 @@ export function createSong(musicData) {
     album: musicData.albumname,
     duration: musicData.interval,
     image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${musicData.albummid}.jpg?max_age=2592000`,
-    url: `http://ws.stream.qqmusic.qq.com/${musicData.songid}.m4a?fromtag=46`
+    url: musicData.url
   })
 }
 
@@ -35,3 +37,25 @@ export function filterSinger(singer) {
   return ret.join('/')
 }
 
+//检查歌曲是否付费
+export function isValidMusic(musicData) {
+  return musicData.songid && musicData.albummid && (!musicData.pay || musicData.pay.payalbumprice === 0)
+}
+
+//·处理歌曲列表并获取歌曲的url地址
+export function processSongsUrl(songs) {
+  if (!songs.length) {
+    return Promise.resolve(songs)
+  }
+  return getSongsUrl(songs).then((purlMap) => {
+    songs = songs.filter((song) => {
+      const purl = purlMap[song.mid]
+      if (purl) {
+        song.url = purl.indexOf('http') === -1 ? `http://dl.stream.qqmusic.qq.com/${purl}` : purl
+        return true
+      }
+      return false
+    })
+    return songs
+  })
+}
