@@ -20,13 +20,13 @@ export default {
     Player
   },
   methods: {
-    getRem () {
-      var html = document.getElementsByTagName('html')[0]
-      html.style.fontSize = html.offsetWidth / 7.5 + 'px'
-    }
+    // getRem () {
+    //   var html = document.getElementsByTagName('html')[0]
+    //   html.style.fontSize = html.offsetWidth / 7.5 + 'px'
+    // }
   },
   mounted () {
-    this.getRem()
+    // this.getRem()
   }
 }
 </script>

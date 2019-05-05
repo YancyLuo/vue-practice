@@ -127,6 +127,9 @@ export default {
         }
       }
     },
+    refresh() {
+      this.$refs.scroll && this.$refs.scroll.refresh()
+    },
     _scrollTo(index) {
       if (index < 0) index = 0
       if (index > this.listHeight.length - 1) index = this.listHeight.length - 2
@@ -152,8 +155,8 @@ export default {
 <style scoped lang="stylus" rel="stylesheet/stylus">
  @import "~common/stylus/variable"
   .listview
-    position: fixed
-    top:88px
+    position: relative
+    top:0
     left:0
     width: 100%
     height: 100%

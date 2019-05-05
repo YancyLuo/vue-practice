@@ -57,10 +57,14 @@ export default {
       this.scroll && this.scroll.enable()
     },
     refresh() {
+      console.log('refresh')
       this.scroll && this.scroll.refresh()
     },
-    scrollToElement(el) {
-      this.scroll && this.scroll.scrollToElement(el, 0)
+    scrollToElement(el, time) {
+      this.scroll && this.scroll.scrollToElement(el, time)
+    },
+    scrollTo(x, y, time) {
+      this.scroll && this.scroll.scrollTo(x, y, time)
     }
   },
   watch: {

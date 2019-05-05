@@ -16,19 +16,48 @@
           <h1 class="title" v-html="currentSong.name"></h1>
           <h2 class="subtitle" v-html="currentSong.singer"></h2>
         </div>
-        <div class="middle">
-          <div class="middle-l">
+        <div class="middle" 
+             @touchstart="middleTouchStart"
+             @touchmove="middleTouchMove"
+             @touchend="middleTouchEnd">
+          <div class="middle-l" ref="cd">
             <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd" :class="cdRotate">
                 <img class="image" :src="currentSong.image">
               </div>
             </div>
+            <div class="playing-lyric-wrapper">
+              <div class="playing-lyric">{{playingLyric}}</div>
+            </div>
           </div>
+          <scroll class="middle-r" ref="lyricList" :asyncData="currentLyric && currentLyric.lines">
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric">
+                <p ref="lyricLine"
+                   class="text"
+                   :class="{'current': currentLineNum == index}"
+                   v-for="(line, index) in currentLyric.lines"
+                   :key="index">{{line.txt}}</p>
+              </div>
+            </div>
+          </scroll>
         </div>
+
         <div class="bottom">
+          <div class="dot-wrapper">
+            <span class="dot" :class="{'active' : currentShow === 'cd'}"></span>
+            <span class="dot" :class="{'active' : currentShow === 'lyric'}"></span>
+          </div>
+          <div class="progress-wrapper">
+            <span class="time time-l">{{_format(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar :percent="percent" @percentChange="onProgressBarChanging"></progress-bar>
+            </div>
+            <span class="time time-r">{{_format(currentSong.duration)}}</span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
-              <i class="icon-sequence"></i>
+              <i :class="iconMode" @click="changeMode"></i>
             </div>
             <div class="icon i-left">
               <i class="icon-prev" :class="disabledCls" @click="prev"></i>
@@ -56,14 +85,21 @@
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
-          <i :class="miniPlayIcon" @click.stop="togglePlaying"></i>
+          <progress-circle :radius="32" :percent="percent">
+            <i :class="miniPlayIcon" class="icon-mini" @click.stop="togglePlaying"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
-    <audio @canplay="ready" @error="error" :src="currentSong.url" ref="audio"></audio>
+    <audio @canplay="ready" 
+           @error="error" 
+           @timeupdate="updateTime"
+           :src="currentSong.url" 
+           ref="audio"
+           @ended="end"></audio>
   </div>
 </template>
 
@@ -71,14 +107,35 @@
 import { mapGetters, mapMutations } from 'vuex'
 import animations from 'create-keyframe-animation'
 import { prefix } from 'common/js/dom'
+import ProgressBar from '@/base/progress-bar/progress-bar'
+import ProgressCircle from '@/base/progress-circle/progress-circle'
+import { playMode } from 'common/js/config'
+import { shuffle } from 'common/js/util'
+import Lyric from 'lyric-parser'
+import Scroll from '@/base/scroll/scroll'
+
 const transform = prefix('transform')
+const transition = prefix('transition')
 
 export default {
   name: 'player',
+  components: {
+    ProgressBar,
+    ProgressCircle,
+    Scroll
+  },
   data() {
     return {
-      songReady: false
+      songReady: false,
+      currentTime: 0,
+      currentLyric: null,
+      currentLineNum: 0,
+      currentShow: 'cd',
+      playingLyric: ''
     }
+  },
+  created() {
+    this.touch = {}
   },
   computed: {
     playIcon() {
@@ -93,15 +150,92 @@ export default {
     disabledCls() {
       return this.songReady ? '' : 'disable'
     },
+    percent() {
+      return this.currentTime / this.currentSong.duration
+    },
+    iconMode() {
+      switch (this.mode) {
+        case playMode.sequence : return 'icon-sequence'
+        case playMode.loop : return 'icon-loop'
+        default :return 'icon-random'
+      }
+    },
     ...mapGetters([
       'fullScreen', 
       'playlist', 
       'currentSong', 
       'playing',
-      'currentIndex'
+      'currentIndex',
+      'mode',
+      'sequenceList'
     ])
   },
   methods:{
+    middleTouchStart(e) {
+      this.touch.initiated = true
+      let touch = e.touches[0]
+      this.touch.startX = touch.pageX
+      this.touch.startY = touch.page
+    },
+    middleTouchMove(e) {
+      if (!this.touch.initiated) return
+      let touch = e.touches[0]
+      let deltaX = touch.pageX - this.touch.startX
+      let deltaY = touch.pageY - this.touch.startY
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        return
+      }
+      let left = this.currentShow === 'cd' ? 0 : -window.innerWidth
+      let offsetLeft = Math.min(Math.max(-window.innerWidth, left + deltaX), 0)
+      this.touch.percent = Math.abs(offsetLeft / window.innerWidth)
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetLeft}px, 0, 0)`
+      this.$refs.cd.style.opacity = 1 - this.touch.percent
+      this.$refs.cd.style[transition] = 'opcaty 0s'
+      this.$refs.lyricList.$el.style[transition] = 'transform 0s'
+    },
+    middleTouchEnd(e) {
+      let offsetLeft
+      let currentShow
+      let percent
+      if (this.currentShow === 'cd') {
+        if (this.touch.percent > 0.1) {
+          offsetLeft = -window.innerWidth
+          currentShow = 'lyric'
+          percent = 1
+        } else {
+          offsetLeft = 0
+          currentShow = 'cd'
+          percent = 0
+        }
+      }
+      if (this.currentShow === 'lyric') {
+        if (this.touch.percent < 0.9) {
+          offsetLeft = 0
+          currentShow = 'cd'
+          percent = 0
+        } else {
+           offsetLeft = -window.innerWidth
+           currentShow = 'lyric'
+           percent = 1
+        }
+      }
+      this.currentShow = currentShow
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetLeft}px, 0, 0)`
+      this.$refs.lyricList.$el.style[transition] = 'transform .3s'
+      this.$refs.cd.style.opacity = 1 - percent
+      this.$refs.cd.style[transition] = 'opcaty .3s'
+    },
+    changeMode(){
+      this.setPlayMode((this.mode + 1) % 3)
+      console.log(this.sequenceList)
+      let list = this.sequenceList
+      if (this.mode === playMode.random) {
+        list = shuffle(this.sequenceList)
+      }
+      this._resetCurrentIndex(list)
+      this.setPlayList(list)
+    },
+    
     back() {
       this.setFullscreen(false)
     },
@@ -110,6 +244,9 @@ export default {
     },
     togglePlaying() {
       this.setPlaying(!this.playing)
+      if (this.currentLyric) {
+        this.currentLyric.togglePlay()
+      }
     },
     ready() {
       this.songReady = true
@@ -117,23 +254,55 @@ export default {
     error() {
       this.songReady = true
     },
-    prev() {
-      if (!this.songReady) return
-      let index = this.currentIndex - 1
-      if (index<0) {
-        index = this.playlist.length - 1
+    updateTime(e) {
+      this.currentTime = e.target.currentTime
+    },
+    end() {
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        this.next()
       }
-      this.setCurrentIndex(index)
-      this.songReady = false
+    },
+    loop() {
+      this.$refs.audio.currentTime = 0
+      this.$refs.audio.play()
+      if (this.currentLyric) {
+        this.currentLyric.seek(0)
+      }
+    },
+    prev() {
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        if (!this.songReady) return
+        let index = this.currentIndex - 1
+        if (index<0) {
+          index = this.playlist.length - 1
+        }
+        this.setCurrentIndex(index)
+        this.songReady = false
+      }
     },
     next() {
-      if (!this.songReady) return
-      let index = this.currentIndex + 1
-      if (index > this.playlist.length - 1) {
-        index = 0
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        if (!this.songReady) return
+        let index = this.currentIndex + 1
+        if (index > this.playlist.length - 1) {
+          index = 0
+        }
+        this.setCurrentIndex(index)
+        this.songReady = false
       }
-      this.setCurrentIndex(index)
-      this.songReady = false
+    },
+    onProgressBarChanging(percent) {
+      if (!this.playing) this.togglePlaying()
+      if (this.currentLyric) {
+        this.currentLyric.seek(this.currentSong.duration * percent * 1000)
+      }
+      this.$refs.audio.currentTime = this.currentSong.duration * percent
     },
     enter(el, done) {
       const {x, y, scale} = this._getPosAndScale()
@@ -172,10 +341,36 @@ export default {
       this.$refs.cdWrapper.style.transition = ''
       this.$refs.cdWrapper.style[transform] = ''
     },
+    getLyric() {
+      this.currentSong.getLyric().then((lyric) => {
+        console.log(lyric)
+        this.currentLyric = new Lyric(lyric, this.handleLyric) //歌词每一行发生改变的时候触发回调函数
+        if (this.playing) {
+          this.currentLyric.play()
+        }
+        console.log(this.currentLyric)
+      }).catch(() => {
+        this.currentLyric = null
+        this.playingLyric = ''
+        this.currentLineNum = 0
+      })
+    },
+    handleLyric({lineNum, txt}) {
+      this.currentLineNum = lineNum
+      this.playingLyric = txt
+      if (lineNum > 5) {
+        let lineEl = this.$refs.lyricLine[lineNum - 5]
+        this.$refs.lyricList.scrollToElement(lineEl, 1000)
+      } else {
+        this.$refs.lyricList.scrollTo(0, 0, 1000)
+      }
+    },
     ...mapMutations({
       setFullscreen: 'SET_FULL_SCREEN',
       setPlaying: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX'
+      setCurrentIndex: 'SET_CURRENT_INDEX',
+      setPlayMode: 'SET_PLAY_MODE',
+      setPlayList: 'SET_PLAYLIST' 
     }),
     _getPosAndScale() {
       const targetWidth = 40
@@ -191,14 +386,33 @@ export default {
         y,
         scale
       }
+    },
+    _format(time) {
+      let min = Math.floor(time / 60)
+      let sec = Math.floor(time % 60)
+      if(sec.toString().length === 1) {
+        sec = '0' + sec
+      }
+      return min + ':' + sec
+    },
+    _resetCurrentIndex(list) {
+      let index = list.findIndex((item) => {
+        return item.mid === this.currentSong.mid
+      })
+       this.setCurrentIndex(index)
     }
   },
   watch: {
-    currentSong() {
+    currentSong(newSong, oldSong) {
+      if (newSong.mid === oldSong.mid) return
       this.setPlaying(true)
-      this.$nextTick(() => {
+      if (this.currentLyric) {
+        this.currentLyric.stop()
+      }
+      setTimeout(() => {
         this.$refs.audio.play()
-      })
+        this.getLyric()
+      },1000)
     },
     playing() {
       let audio = this.$refs.audio
@@ -436,7 +650,7 @@ export default {
         flex: 0 0 30px
         width: 30px
         padding: 0 10px
-        margin-top: -10px
+        // margin-top: -10px
         .icon-play-mini, .icon-pause-mini, .icon-playlist
           font-size: 30px
           color: $color-theme-d

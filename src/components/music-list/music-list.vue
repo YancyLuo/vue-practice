@@ -8,7 +8,7 @@
       <div class="play-wrapper">
         <div ref="playBtn" v-show="songs.length>0 && !isTop" class="play">
           <i class="icon-play"></i>
-          <span class="text">随机播放全部</span>
+          <span class="text" @click="random">随机播放全部</span>
         </div>
       </div>
       <div class="filter"></div>
@@ -37,11 +37,13 @@ import { prefix } from 'common/js/dom'
 import { Transform } from 'stream';
 import Loading from '@/base/loading/loading'
 import { mapActions } from 'vuex'
+import { playlistMixin } from 'common/js/mixin'
 
 const RESERVED_HEIGHT = 40
 
 export default {
   name: 'music-list',
+  mixins: [playlistMixin],
   props:{
     title: {
       type: String,
@@ -74,7 +76,11 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['selectPlay']),
+    handlePlaylist(playlist) {
+      let bottom = playlist.length > 0 ? '60px' : '0px'
+      this.$refs.list.$el.style.bottom = bottom
+      this.$refs.list.refresh()
+    },
     back() {
       this.$router.back()
     },
@@ -83,6 +89,9 @@ export default {
         list: this.songs,
         index
       })
+    },
+    random(){
+      this.randomPlay({ list: this.songs })
     },
     scroll(pos) {
       var scrollY = pos.y
@@ -106,7 +115,8 @@ export default {
       }    
       this.$refs.layer.style.top = -height + 'px'
       this.$refs.bgImage.style.zIndex = zIndex
-    }
+    },
+    ...mapActions(['selectPlay', 'randomPlay']),
   },
   mounted() {
     this.prefix = prefix()

@@ -1,5 +1,5 @@
 <template>
-  <div class="recommend">
+  <div class="recommend" ref="recommend">
     <scroll class="recommend-content" ref="scroll">
       <div>
         <swiper :options="swiperOption" v-if="swiperSlides.length>0" class="swiper">
@@ -37,8 +37,11 @@ import Loading from '@/base/loading/loading'
 import { swiper, swiperSlide } from 'vue-awesome-swiper'
 import { getRecommend, getDiscList } from '@/api/recommend'
 import { ERR_OK } from '@/api/config.js'
+import { playlistMixin } from 'common/js/mixin'
+
 export default {
   name: 'recommend',
+  mixins: [playlistMixin],
   data () {
     return {
       swiperOption: {
@@ -73,6 +76,11 @@ export default {
     })
   },
   methods: {
+    handlePlaylist(playlist) {
+      let bottom = playlist.length > 0 ? '60px' : '0px'
+      this.$refs.recommend.style.bottom = bottom
+      this.$refs.scroll.refresh()
+    },
     _getRecommend () {
       return getRecommend()
     },

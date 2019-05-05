@@ -1,6 +1,6 @@
 <template>
-  <div class="singer">
-    <listview :data="singers" @select="selectSinger"></listview>
+  <div class="singer" ref="singer">
+    <listview :data="singers" @select="selectSinger" ref="listView"></listview>
     <loading v-if="!singers.length && $route.path ===   '/singer'"/>
     <!-- <transition name="slide"> -->
       <router-view/>
@@ -16,10 +16,14 @@ import Listview from '@/base/listview/listview'
 import Loading from '@/base/loading/loading'
 import { setTimeout } from 'timers';
 import { mapMutations } from 'vuex'
+import { playlistMixin } from 'common/js/mixin'
+
 const HOT_NAME = '热门'
 const HOT_LIST_LEN = 10
+
 export default {
   name: 'singer',
+  mixins: [playlistMixin],
   data () {
     return {
       singers:[]
@@ -30,6 +34,11 @@ export default {
     Loading
   },
   methods: {
+    handlePlaylist(playlist) {
+      let bottom = playlist.length > 0 ? '60px' : '0px'
+      this.$refs.singer.style.bottom = bottom
+      this.$refs.listView.refresh()
+    },
     selectSinger(Singer) {
       this.$router.push(`/singer/${Singer.mid}`)
       this.setSinger(Singer)
@@ -100,4 +109,9 @@ export default {
     transition: all .3s
   .slide-enter,.slide-leave-to
     transform: translate3d(100%, 0, 0)
+  .singer
+    position: fixed
+    top: 88px
+    bottom: 0
+    width: 100%
 </style>
