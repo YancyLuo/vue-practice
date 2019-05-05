@@ -13,7 +13,9 @@
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
-            <li v-for="(item, index) in discList" class="item" :key="index">
+            <li v-for="(item, index) in discList" 
+                class="item" :key="index" 
+                @click="selectItem(item)">
               <div class="icon">
                 <img width="60" height="60"  v-lazy="item.imgurl">
               </div>
@@ -27,6 +29,7 @@
       </div>
     <loading v-if="!discList.length"></loading>
     </scroll>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -38,6 +41,7 @@ import { swiper, swiperSlide } from 'vue-awesome-swiper'
 import { getRecommend, getDiscList } from '@/api/recommend'
 import { ERR_OK } from '@/api/config.js'
 import { playlistMixin } from 'common/js/mixin'
+import { mapMutations } from 'vuex'
 
 export default {
   name: 'recommend',
@@ -76,20 +80,27 @@ export default {
     })
   },
   methods: {
+    selectItem(item) {
+      this.$router.push(`/recommend/${item.dissid}`)
+      this.setDisc(item)
+    },
     handlePlaylist(playlist) {
       let bottom = playlist.length > 0 ? '60px' : '0px'
       this.$refs.recommend.style.bottom = bottom
       this.$refs.scroll.refresh()
-    },
-    _getRecommend () {
-      return getRecommend()
     },
     loadImage () {
       if (!this.checkLoad) {
         this.$refs.scroll.refresh()
         this.checkLoad = true
       }
-    }
+    },
+    _getRecommend () {
+      return getRecommend()
+    },
+    ...mapMutations({
+      setDisc: 'SET_DISC'
+    })
   },
 }
 </script>
