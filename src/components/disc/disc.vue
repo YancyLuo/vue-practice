@@ -12,6 +12,10 @@ import { ERR_OK } from '@/api/config'
 import { createSong, isValidMusic, processSongsUrl } from 'common/js/song'
 
 export default {
+  beforeRouteEnter(to, from, next) {
+    if (from.path !== '/recommend') next('/recommend')
+    else next()
+  },
   components: {
     MusicList,
   },

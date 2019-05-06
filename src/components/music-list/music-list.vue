@@ -21,7 +21,7 @@
             :listenScroll="true"
             @scroll="scroll">
       <div class="song-list-wrapper">
-        <song-list :songs="songs" @play="playSong"></song-list>
+        <song-list :songs="songs" @play="playSong" :rank="rank"></song-list>
       </div>
       <div v-show="!songs.length" class="loading-container">
         <loading></loading>
@@ -56,6 +56,10 @@ export default {
     songs: {
       type: Array,
       default: []
+    },
+    rank: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
