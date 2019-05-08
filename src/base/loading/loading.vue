@@ -8,9 +8,10 @@
 <script>
 export default {
   name: 'loading',
-  data () {
-    return {
-      title: '正在加载'
+  props: {
+    title: {
+      type: String,
+      default: '正在加载'
     }
   }
 }

@@ -15,8 +15,11 @@ export default {
   name: 'singer-detail',
   props: ['mid'],
   beforeRouteEnter(to, from, next) {
-    if (from.path !== '/singer') next('/singer')
-    else next()
+    if (from.path === '/') {
+      next(to.matched[0].path) //返回上一级路由
+    } else {
+      next()
+    }
   },
   components: {
     MusicList

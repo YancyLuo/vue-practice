@@ -28,7 +28,14 @@ export default new Router({
     },
     {
       path: '/search',
-      component: Search
+      component: Search,
+      children: [
+        {
+          path: ':mid',
+          component: SingerDetail,
+          props: true
+        }
+      ]
     },
     {
       path: '/rank',
