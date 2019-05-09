@@ -90,10 +90,11 @@
           </progress-circle>
         </div>
         <div class="control">
-          <i class="icon-playlist"></i>
+          <i class="icon-playlist" @click.stop="showPlaylist"></i>
         </div>
       </div>
     </transition>
+    <playlist ref="playlist"></playlist>
     <audio @canplay="ready" 
            @error="error" 
            @timeupdate="updateTime"
@@ -104,25 +105,28 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex'
+import { mapGetters, mapMutations, mapActions } from 'vuex'
 import animations from 'create-keyframe-animation'
 import { prefix } from 'common/js/dom'
 import ProgressBar from '@/base/progress-bar/progress-bar'
 import ProgressCircle from '@/base/progress-circle/progress-circle'
 import { playMode } from 'common/js/config'
-import { shuffle } from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from '@/base/scroll/scroll'
+import Playlist from 'components/playlist/playlist'
+import { playerMixin } from 'common/js/mixin'
 
 const transform = prefix('transform')
 const transition = prefix('transition')
 
 export default {
   name: 'player',
+  mixins: [playerMixin],
   components: {
     ProgressBar,
     ProgressCircle,
-    Scroll
+    Scroll,
+    Playlist
   },
   data() {
     return {
@@ -153,24 +157,18 @@ export default {
     percent() {
       return this.currentTime / this.currentSong.duration
     },
-    iconMode() {
-      switch (this.mode) {
-        case playMode.sequence : return 'icon-sequence'
-        case playMode.loop : return 'icon-loop'
-        default :return 'icon-random'
-      }
-    },
     ...mapGetters([
       'fullScreen', 
       'playlist', 
       'currentSong', 
       'playing',
       'currentIndex',
-      'mode',
-      'sequenceList'
     ])
   },
   methods:{
+    showPlaylist() {
+      this.$refs.playlist.show()
+    },
     middleTouchStart(e) {
       this.touch.initiated = true
       let touch = e.touches[0]
@@ -225,17 +223,16 @@ export default {
       this.$refs.cd.style.opacity = 1 - percent
       this.$refs.cd.style[transition] = 'opcaty .3s'
     },
-    changeMode(){
-      this.setPlayMode((this.mode + 1) % 3)
-      console.log(this.sequenceList)
-      let list = this.sequenceList
-      if (this.mode === playMode.random) {
-        list = shuffle(this.sequenceList)
-      }
-      this._resetCurrentIndex(list)
-      this.setPlayList(list)
-    },
-    
+    // changeMode(){
+    //   this.setPlayMode((this.mode + 1) % 3)
+    //   console.log(this.sequenceList)
+    //   let list = this.sequenceList
+    //   if (this.mode === playMode.random) {
+    //     list = shuffle(this.sequenceList)
+    //   }
+    //   this._resetCurrentIndex(list)
+    //   this.setPlayList(list)
+    // }, 
     back() {
       this.setFullscreen(false)
     },
@@ -250,6 +247,7 @@ export default {
     },
     ready() {
       this.songReady = true
+      this.savePlayHistory(this.currentSong)
     },
     error() {
       this.songReady = true
@@ -343,12 +341,12 @@ export default {
     },
     getLyric() {
       this.currentSong.getLyric().then((lyric) => {
-        console.log(lyric)
+        // console.log(lyric)
         this.currentLyric = new Lyric(lyric, this.handleLyric) //歌词每一行发生改变的时候触发回调函数
         if (this.playing) {
           this.currentLyric.play()
         }
-        console.log(this.currentLyric)
+        // console.log(this.currentLyric)
       }).catch(() => {
         this.currentLyric = null
         this.playingLyric = ''
@@ -368,10 +366,10 @@ export default {
     ...mapMutations({
       setFullscreen: 'SET_FULL_SCREEN',
       setPlaying: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX',
-      setPlayMode: 'SET_PLAY_MODE',
-      setPlayList: 'SET_PLAYLIST' 
     }),
+    ...mapActions([
+      'savePlayHistory'
+    ]),
     _getPosAndScale() {
       const targetWidth = 40
       const width = window.innerWidth * 0.8
@@ -395,16 +393,10 @@ export default {
       }
       return min + ':' + sec
     },
-    _resetCurrentIndex(list) {
-      let index = list.findIndex((item) => {
-        return item.mid === this.currentSong.mid
-      })
-       this.setCurrentIndex(index)
-    }
   },
   watch: {
     currentSong(newSong, oldSong) {
-      if (newSong.mid === oldSong.mid) return
+      if (newSong.mid === oldSong.mid || !newSong.mid) return
       this.setPlaying(true)
       if (this.currentLyric) {
         this.currentLyric.stop()
@@ -419,6 +411,13 @@ export default {
       this.$nextTick(() => {
         this.playing ? audio.play() : audio.pause()
       })
+    },
+    fullScreen(newVal) {
+      if (newVal) {
+        setTimeout(() => {
+          this.$refs.lyricList.refresh()
+        },20)
+      }
     }
   }
 }

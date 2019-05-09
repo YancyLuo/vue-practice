@@ -46,11 +46,11 @@ import HistoryList from '@/base/history-list/history-list'
 import Confirm from '@/base/confirm/confirm'
 import Scroll from '@/base/scroll/scroll'
 import { setTimeout } from 'timers'
-import { playlistMixin } from 'common/js/mixin'
+import { playlistMixin, searchMixin } from 'common/js/mixin'
 
 export default {
   name: 'search',
-  mixins: [playlistMixin],
+  mixins: [playlistMixin, searchMixin],
   components: {
     SearchBox,
     Suggest,
@@ -60,8 +60,7 @@ export default {
   },
   data() {
     return {
-      hotKeys: [],
-      query: ''
+      hotKeys: []
     }
   },
   computed: {
@@ -69,7 +68,6 @@ export default {
       return this.searchHistory.concat(this.hotKeys)
     },
     ...mapGetters([
-      'searchHistory',
       'playlist'
     ])
   },
@@ -78,7 +76,6 @@ export default {
   },
   methods: {
     handlePlaylist(playlist) {
-      console.log(playlist.length)
       let bottom = playlist.length > 0 ? '60px' : '0px'
       this.$refs.shortcutWrapper.style.bottom = bottom
       this.$refs.scroll.refresh()
@@ -88,18 +85,18 @@ export default {
     showConfirm() {
       this.$refs.confirm.show()
     },
-    saveSearch() {
-      this.saveSearchHistory(this.query)
-    },
-    blurInput() {
-      this.$refs.searchBox.blur()
-    },
-    onQueryChange(query) {
-      this.query = query
-    },
-    addQuery(query) {
-      this.$refs.searchBox.setQuery(query)
-    },
+    // saveSearch() {
+    //   this.saveSearchHistory(this.query)
+    // },
+    // blurInput() {
+    //   this.$refs.searchBox.blur()
+    // },
+    // onQueryChange(query) {
+    //   this.query = query
+    // },
+    // addQuery(query) {
+    //   this.$refs.searchBox.setQuery(query)
+    // },
     _getHotKey() {
       getHotKey().then(res => {
         if (res.code === ERR_OK) {
@@ -108,8 +105,6 @@ export default {
       })
     },
     ...mapActions([
-      'saveSearchHistory',
-      'deleteSearchHistory',
       'clearSearchHistory'
     ])
   },
