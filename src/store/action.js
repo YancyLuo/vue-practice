@@ -59,10 +59,11 @@ export function insertSong({ commit, state }, song) {
   sequenceList.splice(++currentSIndex, 0, song)
   if (fsIndex > -1) {
     if(fsIndex < currentSIndex) {
-      sequenceList.splice(fsIndex,0)
+      sequenceList.splice(fsIndex, 1)
     } else {
-      sequenceList.splice(fsIndex + 1, 0)
+      sequenceList.splice(fsIndex + 1, 1)
     }
+  console.log(sequenceList)
   }
   commit(types.SET_PLAYLIST, playlist)
   commit(types.SET_SEQUENCE_LIST, sequenceList)

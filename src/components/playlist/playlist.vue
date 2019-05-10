@@ -134,7 +134,15 @@ export default {
       let index = this.sequenceList.findIndex((item) => {
         return item.mid === current.mid
       })
-      console.log(current.name)
+      // if (index === this.sequenceList.length - 1) {
+      //   console.log(11)
+      //   setTimeout(() => {
+      //     this.$refs.scroll.refresh()
+      //     this.$refs.scroll.scrollTo(0, this.$refs.scroll.scroll.maxScrollY)
+      //   },30)
+      //   // console.log()
+      //   // return
+      // }
       this.$refs.scroll.scrollToElement(this.$refs.list.$el.children[index], 300)
     },
     ...mapMutations({
@@ -144,6 +152,14 @@ export default {
       'deleteSong',
       'deleteSongList'
     ])
+  },
+  watch: {
+    // sequenceList(n) {
+    //   console.log(n)
+    // },
+    // playlist(n) {
+    //   console.log(n)
+    // }
   }
 }
 </script>
