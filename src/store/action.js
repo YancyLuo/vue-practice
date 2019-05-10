@@ -1,7 +1,7 @@
 import * as types from './mutation-types'
 import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/util'
-import { saveSearch, deleteSearch, clearSearch, savePlay} from 'common/js/cache'
+import { saveSearch, deleteSearch, clearSearch, savePlay, saveFavorite, deleteFavorite} from 'common/js/cache'
 import { stat } from 'fs';
 
 export function selectPlay({ commit, state }, { list, index }) {
@@ -120,5 +120,13 @@ export function deleteSongList({ commit }) {
 
 export function savePlayHistory({ commit } ,song) {
   commit(types.SET_PLAT_HISTORY, savePlay(song))
+}
+
+export function saveFavoriteSong({ commit }, song) {
+  commit(types.SET_FAVORITE_LIST, saveFavorite(song))
+}
+
+export function deleteFavoriteSong({commit },song) {
+  commit(types.SET_FAVORITE_LIST, deleteFavorite(song))
 }
  

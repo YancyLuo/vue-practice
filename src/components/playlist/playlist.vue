@@ -18,8 +18,8 @@
                 ref="listItem">
               <i class="current" :class="getCurrentIcon(item)"></i>
               <span class="text">{{item.name}}</span>
-              <span class="like">
-                <i class="icon-not-favorite"></i>
+              <span class="like"  @click.stop="toggleFavorite(item)">
+                <i :class="getFavoriteIcon(item)"></i>
               </span>
               <span class="delete" @click.stop="deleteOne(item)">
                 <i class="icon-delete"></i>
@@ -135,12 +135,10 @@ export default {
         return item.mid === current.mid
       })
       if (index === this.sequenceList.length - 1) {
-        console.log(11)
         setTimeout(() => {
           this.$refs.scroll.refresh()
           this.$refs.scroll.scrollTo(0, this.$refs.scroll.scroll.maxScrollY)
         },30)
-        // console.log()
         return
       }
       this.$refs.scroll.scrollToElement(this.$refs.list.$el.children[index], 300)

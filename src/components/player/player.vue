@@ -56,20 +56,23 @@
             <span class="time time-r">{{_format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
+            <div class="icon i-left" :class="disableCls">
               <i :class="iconMode" @click="changeMode"></i>
             </div>
-            <div class="icon i-left">
-              <i class="icon-prev" :class="disabledCls" @click="prev"></i>
+            <div class="icon i-left" :class="disableCls">
+              <i class="icon-prev" @click="prev"></i>
             </div>
-            <div class="icon i-center">
+            <div class="icon i-center" :class="disableCls">
               <i :class="playIcon" @click="togglePlaying"></i>
             </div>
-            <div class="icon i-right">
-              <i class="icon-next" :class="disabledCls" @click="next"></i>
+            <div class="icon i-right" :class="disableCls">
+              <i class="icon-next" @click="next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon-not-favorite"></i>
+              <i class="icon" 
+                 :class="getFavoriteIcon(currentSong)" 
+                 @click.stop="toggleFavorite(currentSong)">
+              </i>
             </div>
           </div>
         </div>
@@ -115,6 +118,7 @@ import Lyric from 'lyric-parser'
 import Scroll from '@/base/scroll/scroll'
 import Playlist from 'components/playlist/playlist'
 import { playerMixin } from 'common/js/mixin'
+import { clearTimeout } from 'timers';
 
 const transform = prefix('transform')
 const transition = prefix('transition')
@@ -151,7 +155,7 @@ export default {
     cdRotate() {
       return this.playing ? 'play' : 'play pause'
     },
-    disabledCls() {
+    disableCls() {
       return this.songReady ? '' : 'disable'
     },
     percent() {
@@ -240,6 +244,7 @@ export default {
       this.setFullscreen(true)
     },
     togglePlaying() {
+      if(this.disableCls) return
       this.setPlaying(!this.playing)
       if (this.currentLyric) {
         this.currentLyric.togglePlay()
@@ -270,9 +275,14 @@ export default {
       }
     },
     prev() {
+      if(this.disableCls) return
       if (this.mode === playMode.loop) {
         this.loop()
       } else {
+        if(this.playlist.length === 1) {
+          this.loop()
+          return
+        } 
         if (!this.songReady) return
         let index = this.currentIndex - 1
         if (index<0) {
@@ -283,9 +293,14 @@ export default {
       }
     },
     next() {
+      if(this.disableCls) return
       if (this.mode === playMode.loop) {
         this.loop()
       } else {
+        if(this.playlist.length === 1) {
+          this.loop()
+          return
+        } 
         if (!this.songReady) return
         let index = this.currentIndex + 1
         if (index > this.playlist.length - 1) {
@@ -342,10 +357,12 @@ export default {
     getLyric() {
       this.currentSong.getLyric().then((lyric) => {
         // console.log(lyric)
+        if(lyric !== this.currentSong.lyric) return
         this.currentLyric = new Lyric(lyric, this.handleLyric) //歌词每一行发生改变的时候触发回调函数
         if (this.playing) {
           this.currentLyric.play()
         }
+        console.log(11111)
         // console.log(this.currentLyric)
       }).catch(() => {
         this.currentLyric = null
@@ -400,11 +417,18 @@ export default {
       this.setPlaying(true)
       if (this.currentLyric) {
         this.currentLyric.stop()
+        this.currentLyric = null
+        this.playingLyric = ''
+        this.currentLineNum = 0
       }
-      setTimeout(() => {
-        this.$refs.audio.play()
-        this.getLyric()
-      },1000)
+      // window.clearTimeout(this.timer)
+      // this.timer = setTimeout(() => {
+        this.$nextTick(()=> {
+          this.$refs.audio.play()
+          this.getLyric()
+        })
+        
+      // },5000)
     },
     playing() {
       let audio = this.$refs.audio
