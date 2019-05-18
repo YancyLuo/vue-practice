@@ -52,24 +52,30 @@ export default {
       let delta = this.touch.endX - this.touch.startX
       let offsetWidth = Math.min(Math.max(0, delta + this.touch.left),this.$refs.progressBar.clientWidth - progressBtnWidth)
       this._offset(offsetWidth)
+      this._triggerPercent(2)
     },  
     progressEnd() {
       this.touch.initiated = false
-      this._triggerPercent()
+      this._triggerPercent(1)
     },
     progressClick(e) {
       let rect = this.$refs.progressBar.getBoundingClientRect()
       let offsetWidth = e.pageX - rect.left
       this._offset(offsetWidth)
-      this._triggerPercent()
+      this._triggerPercent(1)
     },
     _offset(offsetWidth){
       this.$refs.progress.style.width = offsetWidth + 'px'
       this.$refs.progressBtn.style[transform] = `translate3d(${offsetWidth}px,0,0)`
     },
-    _triggerPercent() {
+    _triggerPercent(type) {
       let percent = this.$refs.progress.clientWidth / (this.$refs.progressBar.clientWidth - progressBtnWidth)
-      this.$emit('percentChange', percent)
+      if(type === 1) {
+        this.$emit('percentChange', percent)
+      } else {
+        this.$emit('percentChanging', percent)
+      }
+      
     }
   }
 }
