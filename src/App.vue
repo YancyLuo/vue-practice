@@ -6,10 +6,12 @@
       <router-view/>
     </keep-alive>
     <player></player>
+    <confirm ref="confirm"></confirm>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+import Confirm from '@/base/confirm/confirm'
 import Player from 'components/player/player'
 import MHeader from 'components/m-header/m-header'
 import Tab from 'components/tab/tab'
@@ -17,7 +19,8 @@ export default {
   components: {
     MHeader,
     Tab,
-    Player
+    Player,
+    Confirm
   },
   methods: {
     // getRem () {
@@ -26,7 +29,6 @@ export default {
     // }
   },
   mounted () {
-    // this.getRem()
   }
 }
 </script>

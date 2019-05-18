@@ -40,6 +40,7 @@
                    :key="index">{{line.txt}}</p>
               </div>
             </div>
+            <div v-if="!currentLyric" class="no-lyric">{{noLyric}}</div>
           </scroll>
         </div>
 
@@ -51,7 +52,10 @@
           <div class="progress-wrapper">
             <span class="time time-l">{{_format(currentTime)}}</span>
             <div class="progress-bar-wrapper">
-              <progress-bar :percent="percent" @percentChange="onProgressBarChanging"></progress-bar>
+              <progress-bar :percent="percent" 
+                            @percentChange="onProgressBarChange"
+                            @percentChanging="onProgressBarChanging">
+              </progress-bar>
             </div>
             <span class="time time-r">{{_format(currentSong.duration)}}</span>
           </div>
@@ -139,7 +143,8 @@ export default {
       currentLyric: null,
       currentLineNum: 0,
       currentShow: 'cd',
-      playingLyric: ''
+      playingLyric: '',
+      noLyric: '此歌曲为没有填词的纯音乐，请您欣赏'
     }
   },
   created() {
@@ -177,7 +182,7 @@ export default {
       this.touch.initiated = true
       let touch = e.touches[0]
       this.touch.startX = touch.pageX
-      this.touch.startY = touch.page
+      this.touch.startY = touch.pageY
     },
     middleTouchMove(e) {
       if (!this.touch.initiated) return
@@ -196,6 +201,7 @@ export default {
       this.$refs.lyricList.$el.style[transition] = 'transform 0s'
     },
     middleTouchEnd(e) {
+      if (!this.touch.percent) return
       let offsetLeft
       let currentShow
       let percent
@@ -226,6 +232,7 @@ export default {
       this.$refs.lyricList.$el.style[transition] = 'transform .3s'
       this.$refs.cd.style.opacity = 1 - percent
       this.$refs.cd.style[transition] = 'opcaty .3s'
+      this.touch = {}
     },
     // changeMode(){
     //   this.setPlayMode((this.mode + 1) % 3)
@@ -310,12 +317,17 @@ export default {
         this.songReady = false
       }
     },
-    onProgressBarChanging(percent) {
+    onProgressBarChange(percent) {
       if (!this.playing) this.togglePlaying()
       if (this.currentLyric) {
         this.currentLyric.seek(this.currentSong.duration * percent * 1000)
       }
       this.$refs.audio.currentTime = this.currentSong.duration * percent
+    },
+    onProgressBarChanging(percent) {
+      if (this.currentLyric) {
+        this.currentLyric.seek(this.currentSong.duration * percent * 1000)
+      }
     },
     enter(el, done) {
       const {x, y, scale} = this._getPosAndScale()
@@ -356,21 +368,27 @@ export default {
     },
     getLyric() {
       this.currentSong.getLyric().then((lyric) => {
-        // console.log(lyric)
+        console.log(lyric)
         if(lyric !== this.currentSong.lyric) return
+        if(lyric.length <= 100 || lyric.slice(0,1) !== '[') {
+          this.playingLyric = this.noLyric
+          return
+        }
         this.currentLyric = new Lyric(lyric, this.handleLyric) //歌词每一行发生改变的时候触发回调函数
         if (this.playing) {
           this.currentLyric.play()
         }
-        console.log(11111)
         // console.log(this.currentLyric)
-      }).catch(() => {
+      }).catch((e) => {
         this.currentLyric = null
         this.playingLyric = ''
         this.currentLineNum = 0
+        this.noLyric = '抱歉，暂未获取到歌词'
+        console.log(e)
       })
     },
     handleLyric({lineNum, txt}) {
+      
       this.currentLineNum = lineNum
       this.playingLyric = txt
       if (lineNum > 5) {
@@ -415,6 +433,7 @@ export default {
     currentSong(newSong, oldSong) {
       if (newSong.mid === oldSong.mid || !newSong.mid) return
       this.setPlaying(true)
+      this.currentTime = 0
       if (this.currentLyric) {
         this.currentLyric.stop()
         this.currentLyric = null
@@ -561,6 +580,15 @@ export default {
               font-size: $font-size-medium
               &.current
                 color: $color-text
+          .no-lyric
+            color: $color-text-l
+            position: absolute
+            top: 50%
+            margin-top: -16px
+            line-height: 32px
+            width: 100%
+            text-align: center
+            font-size: $font-size-medium
       .bottom
         position: absolute
         bottom: 50px
