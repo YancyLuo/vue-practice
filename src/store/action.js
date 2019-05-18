@@ -63,7 +63,7 @@ export function insertSong({ commit, state }, song) {
     } else {
       sequenceList.splice(fsIndex + 1, 1)
     }
-  console.log(sequenceList)
+  // console.log(sequenceList)
   }
   commit(types.SET_PLAYLIST, playlist)
   commit(types.SET_SEQUENCE_LIST, sequenceList)

@@ -182,7 +182,7 @@ export default {
       this.touch.initiated = true
       let touch = e.touches[0]
       this.touch.startX = touch.pageX
-      this.touch.startY = touch.page
+      this.touch.startY = touch.pageY
     },
     middleTouchMove(e) {
       if (!this.touch.initiated) return
@@ -201,6 +201,7 @@ export default {
       this.$refs.lyricList.$el.style[transition] = 'transform 0s'
     },
     middleTouchEnd(e) {
+      if (!this.touch.percent) return
       let offsetLeft
       let currentShow
       let percent
@@ -231,6 +232,7 @@ export default {
       this.$refs.lyricList.$el.style[transition] = 'transform .3s'
       this.$refs.cd.style.opacity = 1 - percent
       this.$refs.cd.style[transition] = 'opcaty .3s'
+      this.touch = {}
     },
     // changeMode(){
     //   this.setPlayMode((this.mode + 1) % 3)
@@ -368,7 +370,7 @@ export default {
       this.currentSong.getLyric().then((lyric) => {
         // console.log(lyric)
         if(lyric !== this.currentSong.lyric) return
-        if(lyric.length <= 30 || lyric.slice(0,1) !== '[') {
+        if(lyric.length <= 100 || lyric.slice(0,1) !== '[') {
           this.playingLyric = this.noLyric
           return
         }
