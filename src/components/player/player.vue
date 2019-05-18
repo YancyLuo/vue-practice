@@ -368,7 +368,7 @@ export default {
     },
     getLyric() {
       this.currentSong.getLyric().then((lyric) => {
-        // console.log(lyric)
+        console.log(lyric)
         if(lyric !== this.currentSong.lyric) return
         if(lyric.length <= 100 || lyric.slice(0,1) !== '[') {
           this.playingLyric = this.noLyric
@@ -379,10 +379,12 @@ export default {
           this.currentLyric.play()
         }
         // console.log(this.currentLyric)
-      }).catch(() => {
+      }).catch((e) => {
         this.currentLyric = null
         this.playingLyric = ''
         this.currentLineNum = 0
+        this.noLyric = '抱歉，暂未获取到歌词'
+        console.log(e)
       })
     },
     handleLyric({lineNum, txt}) {

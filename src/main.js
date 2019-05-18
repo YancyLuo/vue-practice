@@ -7,7 +7,7 @@ import VueLazyload from 'vue-lazyload'
 import store from './store'
 import fastclick from 'fastclick'
 import 'common/stylus/index.styl'
-import vconsole from 'vconsole'
+// import vconsole from 'vconsole'
 
 // var vConsole = new vconsole()
 
