@@ -32,7 +32,7 @@
           </div>
           <scroll class="middle-r" ref="lyricList" :asyncData="currentLyric && currentLyric.lines">
             <div class="lyric-wrapper">
-              <div v-if="currentLyric">
+              <div  v-if="currentLyric">
                 <p ref="lyricLine"
                    class="text"
                    :class="{'current': currentLineNum == index}"
@@ -40,6 +40,7 @@
                    :key="index">{{line.txt}}</p>
               </div>
             </div>
+            <div v-if="!currentLyric" class="no-lyric">此歌曲为没有填词的纯音乐，请您欣赏</div>
           </scroll>
         </div>
 
@@ -356,13 +357,14 @@ export default {
     },
     getLyric() {
       this.currentSong.getLyric().then((lyric) => {
-        // console.log(lyric)
-        if(lyric !== this.currentSong.lyric) return
+        // console.log(lyric.length)
+        // console.log(lyric.slice(0,1))
+        if (lyric !== this.currentSong.lyric) return
+        if (lyric.length <= 30 || lyric.slice(0,1) !== '[') return
         this.currentLyric = new Lyric(lyric, this.handleLyric) //歌词每一行发生改变的时候触发回调函数
         if (this.playing) {
           this.currentLyric.play()
         }
-        console.log(11111)
         // console.log(this.currentLyric)
       }).catch(() => {
         this.currentLyric = null
@@ -371,6 +373,7 @@ export default {
       })
     },
     handleLyric({lineNum, txt}) {
+      console.log(lineNum, txt)
       this.currentLineNum = lineNum
       this.playingLyric = txt
       if (lineNum > 5) {
@@ -550,6 +553,7 @@ export default {
           width: 100%
           height: 100%
           overflow: hidden
+          position: relative
           .lyric-wrapper
             width: 80%
             margin: 0 auto
@@ -561,6 +565,19 @@ export default {
               font-size: $font-size-medium
               &.current
                 color: $color-text
+          .no-lyric
+            color: $color-text-l
+            position: absolute
+            top: 50%
+            margin-top: -16px
+            line-height: 32px
+            width: 100%
+            text-align: center
+            font-size: $font-size-medium
+              // position: absolute
+              // top: 50%
+              // margin-top: -16px
+              // vertical-align: bottom
       .bottom
         position: absolute
         bottom: 50px

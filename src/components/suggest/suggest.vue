@@ -96,7 +96,7 @@ export default {
       if (item.type === TYPE_SINGER) {
         return item.singername
       } else {
-        return `${item.singer}`
+        return `${item.name}-${item.singer}`
       }
     },
     searchMore() {
